@@ -218,7 +218,20 @@ function renderTriangles() {
 
     // SECOND SHAPE
     // Scale diamond by 2 about its center
+    // define the modeling matrix for the second set
     inputTriangles[1].mMatrix = mat4.create();
+    var setCenter = vec3.fromValues(.25,.25,0);
+    
+    mat4.fromTranslation(inputTriangles[1].mMatrix,
+                         vec3.negate(vec3.create(),setCenter));
+    
+    mat4.multiply(inputTriangles[1].mMatrix,
+                  mat4.fromRotation(mat4.create(),Math.PI/4,vec3.fromValues(0,0,1)),
+                  inputTriangles[1].mMatrix);
+    
+    mat4.multiply(inputTriangles[1].mMatrix,
+                  mat4.fromTranslation(mat4.create(),setCenter),
+                  inputTriangles[1].mMatrix);
 
     var diamondCenter = vec3.fromValues(.5,.25,0);
 
