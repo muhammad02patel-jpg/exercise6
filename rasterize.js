@@ -181,56 +181,73 @@ function setupShaders() {
 // render the loaded model
 // render the loaded model
 function renderTriangles() {
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // clear frame/depth buffers
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    // ----------------------------------------------------
-    // Set 0: Triangle
-    // ----------------------------------------------------
+    // First triangle: rotate 90 degrees about its center
     inputTriangles[0].mMatrix = mat4.create();
-    
-    // Bottom-most vertex of the triangle in set 0 (before transformation)
-    var triBottomVert = vec3.fromValues(0.0, 0.5, 0.0); 
 
-    // 1. Move triangle down close to the top corner of the diamond
-    mat4.fromTranslation(inputTriangles[0].mMatrix, vec3.fromValues(-0.62, -0.68, 0));
+    var setCenter = vec3.fromValues(0.25, 0.75, 0);
 
-    // 2. Rotate 90 degrees counter-clockwise (+Math.PI / 2) about its bottom-most vertex
-    var rot0 = mat4.create();
-    mat4.fromTranslation(rot0, vec3.negate(vec3.create(), triBottomVert));
-    mat4.multiply(rot0, mat4.fromRotation(mat4.create(), Math.PI / 2, vec3.fromValues(0, 0, 1)), rot0);
-    mat4.multiply(rot0, mat4.fromTranslation(mat4.create(), triBottomVert), rot0);
+    // Move center to origin
+    mat4.fromTranslation(
+        inputTriangles[0].mMatrix,
+        vec3.negate(vec3.create(), setCenter)
+    );
 
-    mat4.multiply(inputTriangles[0].mMatrix, inputTriangles[0].mMatrix, rot0);
+    // Rotate 90 degrees
+    mat4.multiply(
+        inputTriangles[0].mMatrix,
+        mat4.fromRotation(
+            mat4.create(),
+            Math.PI / 2,
+            vec3.fromValues(0, 0, 1)
+        ),
+        inputTriangles[0].mMatrix
+    );
 
+    // Move center back
+    mat4.multiply(
+        inputTriangles[0].mMatrix,
+        mat4.fromTranslation(mat4.create(), setCenter),
+        inputTriangles[0].mMatrix
+    );
 
-    // ----------------------------------------------------
-    // Set 1: Square -> Diamond
-    // ----------------------------------------------------
+    // Second shape: no transformation
     inputTriangles[1].mMatrix = mat4.create();
-    var set1Center = vec3.fromValues(0.75, 0.25, 0);
 
-    // 1. Position diamond at lower left
-    mat4.fromTranslation(inputTriangles[1].mMatrix, vec3.fromValues(-0.85, -0.75, 0));
+    for (var whichTriSet = 0; whichTriSet < numTriangleSets; whichTriSet++) {
 
-    // 2. Rotate 45 deg and scale up further (2.0x) around center
-    var rot1 = mat4.create();
-    mat4.fromTranslation(rot1, vec3.negate(vec3.create(), set1Center));
-    mat4.multiply(rot1, mat4.fromRotation(mat4.create(), Math.PI / 4, vec3.fromValues(0, 0, 1)), rot1);
-    mat4.multiply(rot1, mat4.fromScale(mat4.create(), vec3.fromValues(2.0, 2.0, 1.0)), rot1);
-    mat4.multiply(rot1, mat4.fromTranslation(mat4.create(), set1Center), rot1);
+        gl.uniformMatrix4fv(
+            modelMatrixULoc,
+            false,
+            inputTriangles[whichTriSet].mMatrix
+        );
 
-    mat4.multiply(inputTriangles[1].mMatrix, inputTriangles[1].mMatrix, rot1);
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            vertexBuffers[whichTriSet]
+        );
 
+        gl.vertexAttribPointer(
+            vertexPositionAttrib,
+            3,
+            gl.FLOAT,
+            false,
+            0,
+            0
+        );
 
-    // Render both sets
-    for (var whichTriSet = 0; whichTriSet < numTriangleSets; whichTriSet++) { 
-        gl.uniformMatrix4fv(modelMatrixULoc, false, inputTriangles[whichTriSet].mMatrix);
+        gl.bindBuffer(
+            gl.ELEMENT_ARRAY_BUFFER,
+            triangleBuffers[whichTriSet]
+        );
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffers[whichTriSet]);
-        gl.vertexAttribPointer(vertexPositionAttrib, 3, gl.FLOAT, false, 0, 0);
-
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleBuffers[whichTriSet]);
-        gl.drawElements(gl.TRIANGLES, 3 * triSetSizes[whichTriSet], gl.UNSIGNED_SHORT, 0);
+        gl.drawElements(
+            gl.TRIANGLES,
+            3 * triSetSizes[whichTriSet],
+            gl.UNSIGNED_SHORT,
+            0
+        );
     }
 }
 function main() {
