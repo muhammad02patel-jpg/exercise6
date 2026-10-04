@@ -179,47 +179,50 @@ function setupShaders() {
 // render the loaded model
 // render the loaded model
 // render the loaded model
+// render the loaded model
 function renderTriangles() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // clear frame/depth buffers
 
     // ----------------------------------------------------
-    // Set 0: Triangle (rotate 90 deg clockwise around center, move left & down)
+    // Set 0: Triangle
     // ----------------------------------------------------
     inputTriangles[0].mMatrix = mat4.create();
-    var set0Center = vec3.fromValues(0.25, 0.75, 0);
+    
+    // Bottom-most vertex of the triangle in set 0 (before transformation)
+    var triBottomVert = vec3.fromValues(0.0, 0.5, 0.0); 
 
-    // 1. Shift left by 0.55 and down by 0.45
-    mat4.fromTranslation(inputTriangles[0].mMatrix, vec3.fromValues(-0.55, -0.45, 0));
+    // 1. Move triangle down close to the top corner of the diamond
+    mat4.fromTranslation(inputTriangles[0].mMatrix, vec3.fromValues(-0.62, -0.68, 0));
 
-    // 2. Rotate -90 degrees (-Math.PI / 2) around its center
+    // 2. Rotate 90 degrees counter-clockwise (+Math.PI / 2) about its bottom-most vertex
     var rot0 = mat4.create();
-    mat4.fromTranslation(rot0, vec3.negate(vec3.create(), set0Center));
-    mat4.multiply(rot0, mat4.fromRotation(mat4.create(), -Math.PI / 2, vec3.fromValues(0, 0, 1)), rot0);
-    mat4.multiply(rot0, mat4.fromTranslation(mat4.create(), set0Center), rot0);
+    mat4.fromTranslation(rot0, vec3.negate(vec3.create(), triBottomVert));
+    mat4.multiply(rot0, mat4.fromRotation(mat4.create(), Math.PI / 2, vec3.fromValues(0, 0, 1)), rot0);
+    mat4.multiply(rot0, mat4.fromTranslation(mat4.create(), triBottomVert), rot0);
 
     mat4.multiply(inputTriangles[0].mMatrix, inputTriangles[0].mMatrix, rot0);
 
 
     // ----------------------------------------------------
-    // Set 1: Square -> Diamond (rotate 45 deg, scale slightly up, move lower-left)
+    // Set 1: Square -> Diamond
     // ----------------------------------------------------
     inputTriangles[1].mMatrix = mat4.create();
     var set1Center = vec3.fromValues(0.75, 0.25, 0);
 
-    // 1. Shift left by 0.38 and down by 0.55
-    mat4.fromTranslation(inputTriangles[1].mMatrix, vec3.fromValues(-0.38, -0.55, 0));
+    // 1. Position diamond at lower left
+    mat4.fromTranslation(inputTriangles[1].mMatrix, vec3.fromValues(-0.85, -0.75, 0));
 
-    // 2. Rotate 45 degrees (Math.PI / 4) and scale by 1.3 around its center
+    // 2. Rotate 45 deg and scale up further (2.0x) around center
     var rot1 = mat4.create();
     mat4.fromTranslation(rot1, vec3.negate(vec3.create(), set1Center));
     mat4.multiply(rot1, mat4.fromRotation(mat4.create(), Math.PI / 4, vec3.fromValues(0, 0, 1)), rot1);
-    mat4.multiply(rot1, mat4.fromScale(mat4.create(), vec3.fromValues(1.3, 1.3, 1.0)), rot1);
+    mat4.multiply(rot1, mat4.fromScale(mat4.create(), vec3.fromValues(2.0, 2.0, 1.0)), rot1);
     mat4.multiply(rot1, mat4.fromTranslation(mat4.create(), set1Center), rot1);
 
     mat4.multiply(inputTriangles[1].mMatrix, inputTriangles[1].mMatrix, rot1);
 
 
-    // Render both triangle sets
+    // Render both sets
     for (var whichTriSet = 0; whichTriSet < numTriangleSets; whichTriSet++) { 
         gl.uniformMatrix4fv(modelMatrixULoc, false, inputTriangles[whichTriSet].mMatrix);
 
@@ -230,8 +233,6 @@ function renderTriangles() {
         gl.drawElements(gl.TRIANGLES, 3 * triSetSizes[whichTriSet], gl.UNSIGNED_SHORT, 0);
     }
 }
-/* MAIN -- HERE is where execution begins after window load */
-
 function main() {
   
   setupWebGL(); // set up the webGL environment
